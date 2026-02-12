@@ -1,6 +1,17 @@
 <?php
 
 declare(strict_types=1);
+function validateTask(array $data): array
+{
+    $errors = [];
+    if (empty($data['title'])) {
+        $errors[] = "El título es obligatorio";
+    }
+    if (empty($data['description'])) {
+        $errors[] = "La descripción es obligatoria";
+    }
+    return $errors;
+}
 header("Content-Type: application/json");
 $method = $_SERVER["REQUEST_METHOD"];
 if ($method === "GET") {
@@ -13,17 +24,18 @@ if ($method === "GET") {
 } else if ($method === "POST") {
     $input = file_get_contents("php://input");
     $data = json_decode($input, true);
-    $taskTitle = $data['title'] ?? null;
-    if ($taskTitle === null) {
-        http_response_code(400);
-        echo json_encode(["error" => "El título es requerido"]);
+    $errors = validateTask($data);
+    if (count($errors) > 0) {
+        http_response_code(422);
+        echo json_encode($errors);
         exit;
     }
     http_response_code(201);
     echo json_encode(
         [
             "message" => "Tarea creada satisfactoriamente",
-            "title" => $taskTitle
+            "title" => $data['title'],
+            "description" => $data['description'],
         ]
     );
 }
